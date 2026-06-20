@@ -94,6 +94,47 @@ export interface BevoApp {
   permissions: string[];
 }
 
+// ── Group channel messages ────────────────────────────────────────────────────
+
+export interface BevoGroupMessage {
+  id: number;
+  groupId: number;
+  channelId: number | null;
+  senderId: string;
+  senderDisplayName?: string;
+  senderAvatar?: string | null;
+  content: string;
+  contentType?: string;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+// ── Contacts ──────────────────────────────────────────────────────────────────
+
+export interface BevoContact {
+  id: string;
+  ownerId: string;
+  peerId: string;
+  status: "pending" | "accepted" | "blocked";
+  createdAt: string;
+  acceptedAt: string | null;
+}
+
+// ── Agent permission grants ───────────────────────────────────────────────────
+
+export interface BevoAgentPermission {
+  id: string;
+  principalId: string;
+  agentId: string;
+  scope: "group" | "dm" | "global";
+  scopeId: string | null;
+  permissions: unknown[];
+  constraints: Record<string, unknown>;
+  grantedAt: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
+}
+
 // ── Permission scopes (declared by apps at install time) ─────────────────────
 
 export type BevoPermission =

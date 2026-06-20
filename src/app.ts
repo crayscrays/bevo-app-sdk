@@ -6,7 +6,11 @@ import type {
   BevoConversation,
   BevoMessage,
   BevoGroup,
+  BevoGroupMessage,
   BevoApp as BevoAppModel,
+  BevoPermission,
+  BevoContact,
+  BevoAgentPermission,
 } from "./types.js";
 
 // ── BevoApiClient ─────────────────────────────────────────────────────────────
@@ -57,6 +61,11 @@ export class BevoApiClient {
   /** Fetch the signed-in user's full backend profile. */
   getMyProfile(): Promise<UserProfile> {
     return this.request("/api/users/me");
+  }
+
+  /** Fetch any user's public profile by principalId. */
+  getUser(principalId: string): Promise<UserProfile> {
+    return this.request(`/api/users/${encodeURIComponent(principalId)}`);
   }
 
   /** Update the signed-in user's profile. */
@@ -126,12 +135,40 @@ export class BevoApiClient {
     return Array.isArray(data) ? data : (data.items ?? []);
   }
 
+  /** Fetch a single group by its numeric ID. */
+  getGroup(groupId: number): Promise<BevoGroup> {
+    return this.request(`/api/groups/${groupId}`);
+  }
+
   /** Search public groups. */
   async searchGroups(query: string): Promise<BevoGroup[]> {
     const data = await this.request<{ items?: BevoGroup[] } | BevoGroup[]>(
       `/api/groups/search?q=${encodeURIComponent(query)}`
     );
     return Array.isArray(data) ? data : (data.items ?? []);
+  }
+
+  /** Fetch messages from a group channel (newest last, max 100). */
+  async getGroupMessages(
+    groupId: number,
+    channelId: number,
+    opts: { limit?: number; before?: string } = {}
+  ): Promise<BevoGroupMessage[]> {
+    const qs = new URLSearchParams();
+    if (opts.limit) qs.set("limit", String(opts.limit));
+    if (opts.before) qs.set("before", opts.before);
+    const data = await this.request<BevoGroupMessage[] | { items?: BevoGroupMessage[] }>(
+      `/api/groups/${groupId}/channels/${channelId}/messages${qs.size ? `?${qs}` : ""}`
+    );
+    return Array.isArray(data) ? data : (data.items ?? []);
+  }
+
+  /** Send a message to a group channel. Returns the created message. */
+  sendGroupMessage(groupId: number, channelId: number, content: string): Promise<BevoGroupMessage> {
+    return this.request(`/api/groups/${groupId}/channels/${channelId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    });
   }
 
   // ── Apps ──────────────────────────────────────────────────────────────────
@@ -150,6 +187,41 @@ export class BevoApiClient {
   /** Get this mini-app's own manifest (by slug). */
   getApp(slug: string): Promise<{ app: BevoAppModel; installed: boolean; grantedPermissions: string[] }> {
     return this.request(`/api/apps/${slug}`);
+  }
+
+  /** List apps installed by the current user. */
+  async getInstalledApps(): Promise<BevoAppModel[]> {
+    const data = await this.request<{ items: BevoAppModel[] }>("/api/apps/installed");
+    return data.items;
+  }
+
+  /** Install an app for the current user, granting the specified permissions. */
+  installApp(slug: string, grantedPermissions: BevoPermission[] = []): Promise<void> {
+    return this.request(`/api/apps/${slug}/install`, {
+      method: "POST",
+      body: JSON.stringify({ grantedPermissions }),
+    });
+  }
+
+  /** Uninstall an app for the current user. */
+  uninstallApp(slug: string): Promise<void> {
+    return this.request(`/api/apps/${slug}/install`, { method: "DELETE" });
+  }
+
+  // ── Contacts ─────────────────────────────────────────────────────────────
+
+  /** List the current user's contact relationships. */
+  async getContacts(): Promise<BevoContact[]> {
+    const data = await this.request<{ contacts: BevoContact[] }>("/api/contacts");
+    return data.contacts;
+  }
+
+  // ── Permissions ───────────────────────────────────────────────────────────
+
+  /** List active permission grants the current user has given to bot agents. */
+  async getMyPermissions(): Promise<BevoAgentPermission[]> {
+    const data = await this.request<{ items: BevoAgentPermission[] }>("/api/agent-permissions/my");
+    return data.items;
   }
 
   // ── Wallet ────────────────────────────────────────────────────────────────

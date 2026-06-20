@@ -8,6 +8,9 @@ export type {
   BevoConversation,
   BevoMessage,
   BevoGroup,
+  BevoGroupMessage,
   BevoApp,
   BevoPermission,
+  BevoContact,
+  BevoAgentPermission,
 } from "./types.js";
