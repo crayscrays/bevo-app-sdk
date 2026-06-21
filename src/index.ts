@@ -13,4 +13,5 @@ export type {
   BevoPermission,
   BevoContact,
   BevoAgentPermission,
+  AttachmentMessage,
 } from "./types.js";
