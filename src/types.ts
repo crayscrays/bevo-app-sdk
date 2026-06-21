@@ -94,6 +94,22 @@ export interface BevoApp {
   permissions: string[];
 }
 
+// ── Attachment ────────────────────────────────────────────────────────────────
+
+/** Structured data for messages with contentType "attachment". */
+export interface AttachmentMessage {
+  url: string;
+  filename: string;
+  /** MIME type, e.g. "image/png" or "application/pdf". */
+  contentType?: string;
+  /** File size in bytes. */
+  size?: number;
+  /** Image/video width in pixels. */
+  width?: number;
+  /** Image/video height in pixels. */
+  height?: number;
+}
+
 // ── Group channel messages ────────────────────────────────────────────────────
 
 export interface BevoGroupMessage {
@@ -105,7 +121,11 @@ export interface BevoGroupMessage {
   senderAvatar?: string | null;
   content: string;
   contentType?: string;
-  metadata?: Record<string, unknown> | null;
+  metadata?: {
+    attachment?: AttachmentMessage;
+    caption?: string;
+    [key: string]: unknown;
+  } | null;
   createdAt: string;
 }
 
