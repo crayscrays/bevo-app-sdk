@@ -69,7 +69,12 @@ export class BevoApiClient {
   }
 
   /** Update the signed-in user's profile. */
-  updateProfile(data: Partial<Pick<UserProfile, "displayName" | "username">> & { bio?: string }): Promise<void> {
+  updateProfile(data: Partial<Pick<UserProfile, "displayName" | "username">> & {
+    bio?: string;
+    searchableByHandle?: boolean;
+    searchableByWallet?: boolean;
+    searchableByEmail?: boolean;
+  }): Promise<void> {
     return this.request("/api/users/profile", {
       method: "PATCH",
       body: JSON.stringify(data),
